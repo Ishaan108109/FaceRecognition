@@ -28,13 +28,21 @@
     @androidx.camera.core.ExperimentalGetImage
     class MainActivity : AppCompatActivity() {
 
+        //A Preview object that provides a live camera preview
         private var preview: Preview? = null
+        //An ImageCapture object that captures images from the camera.
         private var imageCapture: ImageCapture? = null
+        //An ImageAnalysis object that analyzes images from the camera
         private var imageAnalyzer: ImageAnalysis? = null
+        //: A Camera object that represents the camera device.
         private var camera: androidx.camera.core.Camera? = null
+        // An ExecutorService object that runs the camera operations in a separate thread.
         private lateinit var cameraExecutor: ExecutorService
+        // A FaceDetector object that uses Google's ML Kit to detect faces in images.
         private lateinit var detector: FaceDetector
+        //A PreviewView object that displays the live camera preview.
         private lateinit var viewFinder: PreviewView
+        //A Boolean variable that indicates whether the user is blinking.
         private var isBlinking = false
 
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,6 +78,7 @@
             cameraExecutor = Executors.newSingleThreadExecutor()
         }
 
+        //A function that starts the camera preview and sets up the camera image capture and analysis.
         private fun startCamera() {
             val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
             cameraProviderFuture.addListener({
@@ -120,7 +129,7 @@
                                 }
                         }
                     }
-
+//cameraSelector: A CameraSelector object that is used to select the front-facing camera.
                 val cameraSelector =
                     CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_FRONT).build()
 
@@ -138,15 +147,16 @@
             }, ContextCompat.getMainExecutor(this))
         }
 
+        //A function that captures an image from the camera and saves it to a file.
         private fun captureImage() {
             val imageCapture = imageCapture ?: return
 
             val photoFile = File(
                 externalMediaDirs.firstOrNull(),
-                "${System.currentTimeMillis()}.jpg"
+                "${System.currentTimeMillis()}.jpg"//creates a new file
             )
 
-            val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+            val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()//An OutputFileOptions object that specifies the output file for the captured image.
 
             imageCapture.takePicture(
                 outputOptions,
@@ -174,6 +184,7 @@
                 })
         }
 
+        //Ask for users permissions
         override fun onRequestPermissionsResult(
             requestCode: Int, permissions: Array<String>, grantResults: IntArray
         ) {
