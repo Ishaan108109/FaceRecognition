@@ -1,4 +1,4 @@
-package com.example.cameraxintegration
+package com.example.cameraxintegration.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -14,8 +14,11 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ViewModelProvider
 import com.example.cameraxintegration.Constants.PERMISSIONS_REQUEST_CAMERA
 import com.example.cameraxintegration.databinding.ActivityMainBinding
+import com.example.cameraxintegration.repo.model.UserImageEntity
+import com.example.cameraxintegration.viewmodel.MainViewModel
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetector
@@ -31,12 +34,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var detector: FaceDetector
     private lateinit var binding: ActivityMainBinding
+    lateinit var viewModel: MainViewModel
     private var isBlinking = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        viewModel = ViewModelProvider(this)[MainViewModel::class.java]
+        initObserver()
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.CAMERA
@@ -49,6 +55,16 @@ class MainActivity : AppCompatActivity() {
             )
         } else {
             startCamera()
+        }
+    }
+
+    private fun initObserver() {
+        viewModel.insertUser.observe(this) {
+            Toast.makeText(
+                this@MainActivity,
+                "Image captured successfully",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -148,13 +164,8 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Image captured successfully",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    viewModel.insertUser(UserImageEntity(imagePath = output.savedUri.toString()))
                     isBlinking = false
-                    startCamera()
                 }
             })
     }
