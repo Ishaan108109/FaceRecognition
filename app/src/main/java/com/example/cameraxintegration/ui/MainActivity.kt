@@ -3,6 +3,8 @@ package com.example.cameraxintegration.ui
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
@@ -15,10 +17,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.cameraxintegration.Constants.PERMISSIONS_REQUEST_CAMERA
+import com.example.cameraxintegration.Utils
 import com.example.cameraxintegration.databinding.ActivityMainBinding
-import com.example.cameraxintegration.repo.model.UserImageEntity
-import com.example.cameraxintegration.viewmodel.MainViewModel
+import com.example.cameraxintegration.model.CheckSpoofingBody
+import com.example.cameraxintegration.model.UserImageEntity
+import com.example.cameraxintegration.network.Resource
+import com.example.cameraxintegration.ui.viewmodel.MainViewModel
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetector
@@ -65,6 +71,20 @@ class MainActivity : AppCompatActivity() {
                 "Image captured successfully",
                 Toast.LENGTH_SHORT
             ).show()
+        }
+        viewModel.checkSpoofing.observe(this) {
+            when (it) {
+                is Resource.Error -> {
+                    it.message?.let { message ->
+                        Log.d("MainActivity", "initObserver: $message")
+                    }
+                }
+                is Resource.Loading -> {
+                    // binding.loadingPb.visibility = View.VISIBLE
+                }
+                is Resource.Success -> {
+                }
+            }
         }
     }
 
@@ -164,7 +184,15 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    viewModel.insertUser(UserImageEntity(imagePath = output.savedUri.toString()))
+                    viewModel.checkSpoofing(
+                        CheckSpoofingBody(
+                            Utils.uriToBase64(
+                                this@MainActivity,
+                                output.savedUri
+                            )
+                        )
+                    )
+                    // viewModel.insertUser(UserImageEntity(imagePath = output.savedUri.toString()))
                     isBlinking = false
                 }
             })

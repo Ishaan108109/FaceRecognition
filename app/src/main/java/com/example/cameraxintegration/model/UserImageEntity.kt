@@ -1,4 +1,4 @@
-package com.example.cameraxintegration.repo.model
+package com.example.cameraxintegration.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
