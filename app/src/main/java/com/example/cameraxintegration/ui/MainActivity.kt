@@ -1,10 +1,10 @@
 package com.example.cameraxintegration.ui
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
@@ -17,13 +17,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.cameraxintegration.Constants.PERMISSIONS_REQUEST_CAMERA
 import com.example.cameraxintegration.Utils
+import com.example.cameraxintegration.Utils.convertUriToBase64
 import com.example.cameraxintegration.databinding.ActivityMainBinding
 import com.example.cameraxintegration.model.CheckSpoofingBody
-import com.example.cameraxintegration.model.UserImageEntity
-import com.example.cameraxintegration.network.Resource
 import com.example.cameraxintegration.ui.viewmodel.MainViewModel
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
@@ -33,7 +31,6 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-@androidx.camera.core.ExperimentalGetImage
 class MainActivity : AppCompatActivity() {
 
     private lateinit var imageCapture: ImageCapture
@@ -72,20 +69,6 @@ class MainActivity : AppCompatActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         }
-        viewModel.checkSpoofing.observe(this) {
-            when (it) {
-                is Resource.Error -> {
-                    it.message?.let { message ->
-                        Log.d("MainActivity", "initObserver: $message")
-                    }
-                }
-                is Resource.Loading -> {
-                    // binding.loadingPb.visibility = View.VISIBLE
-                }
-                is Resource.Success -> {
-                }
-            }
-        }
     }
 
     private fun startCamera() {
@@ -115,6 +98,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("UnsafeOptInUsageError")
     private fun blinkDetection(): ImageAnalysis {
         return ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -184,15 +168,10 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    viewModel.checkSpoofing(
-                        CheckSpoofingBody(
-                            Utils.uriToBase64(
-                                this@MainActivity,
-                                output.savedUri
-                            )
-                        )
-                    )
                     // viewModel.insertUser(UserImageEntity(imagePath = output.savedUri.toString()))
+                    val base64 = output.savedUri?.let { convertUriToBase64(this@MainActivity, it) }
+                    Log.d("Helo", "onImageSaved: $base64")
+                    viewModel.isImageSpoofed(CheckSpoofingBody(base64))
                     isBlinking = false
                 }
             })

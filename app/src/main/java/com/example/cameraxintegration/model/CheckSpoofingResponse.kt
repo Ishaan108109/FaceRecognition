@@ -3,7 +3,7 @@ package com.example.cameraxintegration.model
 
 import com.google.gson.annotations.SerializedName
 
-data class SpoofingResponse(
+data class CheckSpoofingResponse(
     @SerializedName("message")
     val message: String?,
     @SerializedName("score")
