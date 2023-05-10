@@ -13,5 +13,5 @@ object Client {
         .baseUrl("https://dev.honohr.com/")
         .addConverterFactory(GsonConverterFactory.create(gson))
         .build()
-    val api= retrofit.create(ApiService::class.java)
+    val api: ApiService = retrofit.create(ApiService::class.java)
 }

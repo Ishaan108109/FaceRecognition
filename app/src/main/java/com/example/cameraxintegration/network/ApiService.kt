@@ -8,7 +8,7 @@ import retrofit2.http.POST
 
 interface ApiService {
 
-    @POST("attendance/checkSpoofing")
+    @POST("attendance/checkSpoofing/")
     suspend fun isImageSpoofed(@Body checkSpoofingBody: CheckSpoofingBody): Response<CheckSpoofingResponse>
 
 }
