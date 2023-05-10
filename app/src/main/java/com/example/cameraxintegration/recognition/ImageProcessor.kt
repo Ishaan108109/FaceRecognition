@@ -11,6 +11,7 @@ import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
 import kotlin.math.sqrt
 
 
@@ -90,34 +91,56 @@ object ImageProcessor {
     }
 
 //function to compare facial features
-    private fun compareFacialFeatures(features1: List<FacialFeatures>, features2: List<FacialFeatures>): Float {
-        // Ensure that both feature lists have the same length
-        require(features1.size == features2.size) { "Feature lists must have the same length" }
+private fun compareFacialFeatures(features1: List<FacialFeatures>, features2: List<FacialFeatures>): Float {
+    // Ensure that both feature lists have the same length
+    require(features1.size == features2.size) { "Feature lists must have the same length" }
 
-        // Calculate the dot product of the two feature vectors
-        var dotProduct = 0.0
-        for (i in features1.indices) {
-            dotProduct += features1[i].value * features2[i].value
+    // Calculate the Euclidean distance between the landmark points and use that to compare the facial features
+    var sumOfSquaredDistances = 0.0
+    for (i in features1.indices) {
+        val landmarks1 = features1[i].landmarks
+        val landmarks2 = features2[i].landmarks
+        for (j in landmarks1.indices) {
+            val distance = sqrt((landmarks1[j].x - landmarks2[j].x).pow(2) + (landmarks1[j].y - landmarks2[j].y).pow(2))
+            sumOfSquaredDistances += distance.pow(2)
         }
-
-        // Calculate the magnitudes of each feature vector
-        var mag1 = 0.0
-        var mag2 = 0.0
-        for (feature in features1) {
-            mag1 += feature.value * feature.value
-        }
-        for (feature in features2) {
-            mag2 += feature.value * feature.value
-        }
-        mag1 = sqrt(mag1)
-        mag2 = sqrt(mag2)
-
-        // Calculate the cosine similarity between the two feature vectors
-        val similarity = dotProduct / (mag1 * mag2)
-
-        // Normalize the similarity score to a value between 0 and 1
-        return max(0.0f, min(similarity.toFloat(), 1.0f))
     }
+
+    // Normalize the similarity score to a value between 0 and 1
+    val maxDistance = sqrt(features1.size * 2.0) // Maximum distance possible is sqrt(2) for each landmark point
+    val similarity = 1.0 - (sqrt(sumOfSquaredDistances) / maxDistance)
+
+    return max(0.0f, min(similarity.toFloat(), 1.0f))
+}
+
+//    private fun compareFacialFeatures(features1: List<FacialFeatures>, features2: List<FacialFeatures>): Float {
+//        // Ensure that both feature lists have the same length
+//        require(features1.size == features2.size) { "Feature lists must have the same length" }
+//
+//        // Calculate the dot product of the two feature vectors
+//        var dotProduct = 0.0
+//        for (i in features1.indices) {
+//            dotProduct += features1[i].value * features2[i].value
+//        }
+//
+//        // Calculate the magnitudes of each feature vector
+//        var mag1 = 0.0
+//        var mag2 = 0.0
+//        for (feature in features1) {
+//            mag1 += feature.value * feature.value
+//        }
+//        for (feature in features2) {
+//            mag2 += feature.value * feature.value
+//        }
+//        mag1 = sqrt(mag1)
+//        mag2 = sqrt(mag2)
+//
+//        // Calculate the cosine similarity between the two feature vectors
+//        val similarity = dotProduct / (mag1 * mag2)
+//
+//        // Normalize the similarity score to a value between 0 and 1
+//        return max(0.0f, min(similarity.toFloat(), 1.0f))
+//    }
 
 
     data class FacialFeatures(val box: Rect, val landmarks: List<PointF>)
